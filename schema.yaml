@@ -1,0 +1,583 @@
+## Copyright (c) 2021, Oracle and/or its affiliates.
+## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
+
+title: "Deploy WordPress CMS on OCI with MDS"
+stackDescription: "Deploy WordPress CMS on OCI with MySQL Database Service"
+schemaVersion: 1.2.0
+version: "20201104"
+locale: "en"
+
+variableGroups:
+- title: General Configuration
+  visible: false
+  variables:
+  - tenancy_ocid
+  - region
+  - release
+  - use_existing_vcn
+  - vcn_id
+  - lb_subnet_id
+  - wp_subnet_id
+  - mds_subnet_id
+  - fss_subnet_id
+  - bastion_subnet_id
+
+- title: Required Configuration
+  visible: true  
+  variables:
+  - compartment_ocid
+  - availability_domain_name 
+  - admin_password
+  - wp_password
+  - wp_site_admin_pass
+  - numberOfNodes
+  - show_advanced
+
+- title: Load Balancer Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - lb_shape 
+  - flex_lb_min_shape
+  - flex_lb_max_shape 
+
+- title: Bastion Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - use_bastion_service
+  - bastion_shape
+  - bastion_flex_shape_ocpus
+  - bastion_flex_shape_memory
+
+- title: Network Optional Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - vcn
+  - vcn_cidr
+
+- title: Compute Optional Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - ssh_public_key
+  - instance_os
+  - linux_os_version
+  - label_prefix
+  - node_shape
+  - node_flex_shape_ocpus
+  - node_flex_shape_memory
+
+- title: File Storage Service Optional Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - use_shared_storage
+
+- title: WordPress Optional Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - wp_site_admin_email
+  - wp_site_admin_user
+  - wp_plugins
+  - wp_themes
+  - wp_name
+  - wp_schema
+  - wp_site_url
+  - wp_site_title
+
+- title: MDS Optional Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - mysql_shape
+  - admin_username
+  - mysql_is_highly_available
+
+
+variables:
+
+  show_advanced:
+    type: boolean
+    title: "Show advanced options?"
+    description: "Shows advanced options."
+    visible: true
+    default: false
+
+  compartment_ocid:
+    type: oci:identity:compartment:id
+    required: true
+    visibile: true
+    title: "Compartment"
+    description: "Compartment where your WordPress and MDS will be deployed."
+
+  region:
+    type: oci:identity:region:name
+    required: true
+    visibile: true
+    title: "Region"
+    description: "Choose Region where your WordPress and MDS will be deployed."
+
+  availability_domain_name:
+    type: oci:identity:availabilitydomain:name
+    required: true
+    visibile: true
+    title: "Availability Domain to be chosen"
+    description: "Choose Availability Domain where your WordPress and MDS will be deployed."
+    dependsOn:
+      regionName: ${region}
+      compartmentId: ${compartment_ocid}
+
+  admin_password:
+    type: password
+    required: true
+    title: "MySQL Database System Admin User's Password"
+    description: "Choose password for MySQL Database System admin user."
+    pattern: "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\\\"\\\\|,.<>\\/?]).{8,32}$"
+
+  wp_password:
+    type: password
+    required: true
+    title: "MySQL Database System WordPress User's Password"
+    description: "Choose MySQL Database System Password for WordPress User."
+    pattern: "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\\\"\\\\|,.<>\\/?]).{8,32}$"
+
+  wp_site_title:
+    type: string
+    required: false
+    visible: true
+    title: "WordPress Site Title"
+    description: "Define WordPress Site Title"
+
+  wp_site_admin_user:
+    type: string
+    required: true
+    visible: true
+    default: "admin"
+    title: "WordPress Site Admin Username"
+    description: "Define WordPress Site Admin Username"
+
+  numberOfNodes:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 2
+    title: "How many WordPress Nodes?"
+    description: "Choose number of WordPress Nodes to be deployed (more then one will create LoadBalancer)."
+
+  use_bastion_service:
+    type: boolean
+    visible:
+      gt:
+        - numberOfNodes
+        - 1
+    default: false
+    required: false
+    title: "Use OCI Bastion Service"
+    description: "Check the box to use OCI Bastion Service instead of Bastion Host VM."
+
+  use_shared_storage:
+    type: boolean
+    visible:
+      gt:
+        - numberOfNodes
+        - 1
+    default: true
+    required: false
+    title: "Use OCI File Storage Service"
+    description: "Check the box to use OCI FSS for WordPress multinode setup (shared WP-CONTENT directory)."
+
+  bastion_shape:
+    type: oci:core:instanceshape:name
+    required: false
+    title: "BastionVM Shape"
+    description: "A shape is a template that determines the number of CPUs, amount of memory, and other resources allocated to a newly created instance."
+    default: "VM.Standard.E3.Flex"
+    visible:
+      and:
+        - gt:
+          - numberOfNodes
+          - 1      
+        - eq:
+          - use_bastion_service
+          - false  
+    dependsOn:
+      compartmentId: ${compartment_ocid}
+
+  bastion_flex_shape_ocpus:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 1
+    title: "BastionVM Flex Shape OCPUs"
+    description: "Choose number of OCPUs for Flex Shape."
+    visible:
+      and:
+        - gt:
+          - numberOfNodes
+          - 1      
+        - eq:
+          - use_bastion_service
+          - false         
+        - or:
+          - eq:
+            - bastion_shape 
+            - "VM.Standard.E3.Flex"
+          - eq:
+            - bastion_shape 
+            - "VM.Standard.E4.Flex"
+          - eq:
+            - bastion_shape 
+            - "VM.Standard.A1.Flex"
+          - eq:
+            - bastion_shape 
+            - "VM.Optimized3.Flex"
+
+  bastion_flex_shape_memory:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 1
+    title: "BastionVM Flex Shape Memory (GB)"
+    description: "Choose number GB for Flex Shape Memory."
+    visible:
+      and:
+        - gt:
+          - numberOfNodes
+          - 1      
+        - eq:
+          - use_bastion_service
+          - false         
+        - or:
+          - eq:
+            - bastion_shape 
+            - "VM.Standard.E3.Flex"
+          - eq:
+            - bastion_shape 
+            - "VM.Standard.E4.Flex"
+          - eq:
+            - bastion_shape 
+            - "VM.Standard.A1.Flex"
+          - eq:
+            - bastion_shape 
+            - "VM.Optimized3.Flex"
+
+  wp_site_admin_pass:
+    type: password
+    required: true
+    visible: true
+    title: "WordPress Site Admin Password"
+    description: "Define WordPress Site Admin Password"
+  
+  wp_site_admin_email:
+    type: string
+    visible: true
+    required: true
+    default: "admin@example.com"
+    title: "WordPress Site Admin Email"
+    description: "Define WordPress Site Admin E-mail"
+
+  vcn:
+    type: string
+    visible: false
+    required: true
+    title: "VCN name"
+    description: "Type VCN name where your WordPress and MDS will be deployed."
+
+  vcn_cidr:
+    type: string
+    visible: false
+    required: false
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    title: "VCN CIDR"
+    description: "Choose VCN CIDR for your WordPress and MDS deployments."
+
+  node_shape:
+    type: oci:core:instanceshape:name
+    required: false
+    title: "Wordpress node shape"
+    description: "Choose Instance Shape for WordPress host."
+    default: "VM.Standard.E3.Flex"
+    dependsOn:
+      compartmentId: ${compartment_ocid}
+
+  ssh_public_key:
+    type: oci:core:ssh:publickey
+    title: "Public SSH Key"
+    description: "Choose public SSH Key to be uploaded into compute instances."
+    required: false
+
+  instance_os:
+    type: enum
+    required: false
+    visible: false
+    title: "Instance OS"
+    description: "An Operating System that determines the operating system for WordPress host."
+    default: "Oracle Linux"
+    enum:
+      - "Oracle Linux"
+
+  node_flex_shape_ocpus:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 1
+    title: "Flex Shape OCPUs"
+    description: "Choose number of OCPUs for Flex Shape."
+    visible:
+      and:
+        - or:
+          - eq:
+            - node_shape 
+            - "VM.Standard.E3.Flex"
+          - eq:
+            - node_shape 
+            - "VM.Standard.E4.Flex"
+          - eq:
+            - node_shape 
+            - "VM.Standard.A1.Flex"
+          - eq:
+            - node_shape 
+            - "VM.Optimized3.Flex"
+
+  node_flex_shape_memory:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 10
+    title: "Flex Shape Memory (GB)"
+    description: "Choose number GB for Flex Shape Memory."
+    visible:
+      and:
+        - or:
+          - eq:
+            - node_shape 
+            - "VM.Standard.E3.Flex"
+          - eq:
+            - node_shape 
+            - "VM.Standard.E4.Flex"
+          - eq:
+            - node_shape 
+            - "VM.Standard.A1.Flex"
+          - eq:
+            - node_shape 
+            - "VM.Optimized3.Flex"
+
+  linux_os_version:
+    type: enum
+    required: false
+    visible: false
+    title: "Instance OS version"
+    description: "An Operating System version that determines the operating system version for WordPress host."
+    default: "8"
+    enum:
+      - "8"
+
+  lb_shape:
+    type: enum
+    title: "LoadBalancer Shape"
+    description: "Choose LoadBalancer Shape"
+    default: "flexible"
+    required: false 
+    enum:
+      - "flexible"
+      - "100Mbps"
+      - "10Mbps"
+      - "10Mbps-Micro"
+      - "400Mbps"
+      - "8000Mbps"
+    visible: 
+      gt:
+        - numberOfNodes
+        - 1
+
+  flex_lb_min_shape:
+    type: enum
+    required: false
+    default: "10"
+    title: "LB Flex Min Shape"
+    description: "Choose Minimum Shape for Flex Load Balancer."
+    enum:
+      - "10"
+      - "100"
+      - "1000"
+      - "400"
+      - "8000"
+    visible:
+      and:
+        - eq:
+          - lb_shape 
+          - "flexible"
+        - gt:
+          - numberOfNodes
+          - 1
+
+  flex_lb_max_shape:
+    type: enum
+    required: false
+    default: "100"
+    title: "LB Flex Max Shape"
+    description: "Choose Maximum Shape for Flex Load Balancer."
+    enum:
+      - "10"
+      - "100"
+      - "1000"
+      - "400"
+      - "8000"
+    visible:
+      and:
+        - eq:
+          - lb_shape 
+          - "flexible"
+        - gt:
+          - numberOfNodes
+          - 1
+
+  mysql_shape:
+    type: enum
+    required: false
+    default: "MySQL.VM.Standard.E3.1.8GB"
+    title: "MySQL Database System Shape"
+    description: "Choose MySQL Database System Shape for your MDS deployments."
+    enum:
+      - "VM.Standard.E2.1"
+      - "VM.Standard.E2.2"
+      - "VM.Standard.E2.4"  
+      - "VM.Standard.E2.8"
+      - "MySQL.VM.Standard.E3.1.8GB"
+      - "MySQL.VM.Standard.E3.1.16GB"      
+      - "MySQL.VM.Standard.E3.2.32GB"
+      - "MySQL.VM.Standard.E3.4.64GB"
+      - "MySQL.VM.Standard.E3.8.128GB"
+      - "MySQL.VM.Standard.E3.16.256GB"
+      - "MySQL.VM.Standard.E3.24.384GB"
+      - "MySQL.VM.Standard.E3.32.512GB"
+      - "MySQL.VM.Standard.E3.48.768GB"    
+      - "MySQL.VM.Standard.E3.64.1024GB"  
+      - "MySQL.HeatWave.VM.Standard.E3"   
+
+  mysql_is_highly_available:
+    type: boolean
+    title: "MySQL Database System in HA?"
+    description: "Choose if MySQL Database System should be highly available."
+    visible: true
+    default: false
+
+  label_prefix:
+    type: string
+    required: false
+    visible: false
+    title: "WordPress Hostname Prefix"
+    description: "Type WordPress Hostname Prefix."
+
+  admin_username:
+    type: string
+    required: false
+    title: "MySQL Admin Username"
+    description: "Type MySQL Database Service's admin username."
+    minLength: 1
+    maxLength: 14
+    pattern: "^[a-zA-Z][a-zA-Z0-9]+$"
+
+  wp_name:
+    type: string
+    required: false
+    title: "MySQL WordPress Username"
+    description: "Type MySQL Username for WordPress."
+    minLength: 2
+    maxLength: 14
+    pattern: "^[a-zA-Z][a-zA-Z0-9]+$"
+
+  wp_schema:
+    type: string
+    required: false
+    title: "MySQL WordPress Schema"
+    description: "Type MySQL Schema/Database for WordPress."
+
+  wp_plugins:
+    type: array
+    items:
+      type: string
+      pattern: "^[a-zA-Z0-9\\-]+$"
+    required: true
+    title: "WordPress Plugins"
+    default: ["hello-dolly","elementor"]
+    minItems: 1
+    uniqueItems: true
+    description: "Define WordPress Plugins to be installed with wp-cli (minimum 1 plugin)."
+
+  wp_themes:
+    type: array
+    items:
+      type: string
+      pattern: "^[a-zA-Z0-9\\-]+$"
+    required: true
+    title: "WordPress Themes"
+    default: ["lodestar", "twentysixteen"]
+    minItems: 1
+    uniqueItems: true
+    description: "Define WordPress Themes to be installed with wp-cli (minimum 1 theme)."
+
+  wp_site_url:
+    type: string
+    required: false
+    title: "WordPress Site URL"
+    description: "Define WordPress Site URL"
+
+  release:
+    type: string
+    required: false
+    visible: false
+    title: "Reference Architecture Release (OCI Architecture Center)"
+
+outputs:
+
+  wordpress_wp-admin_url:
+    title: "WordPress CMS WP-Admin URL"
+    displayText: "WordPress CMS WP-Admin URL"
+    type: string
+    visible: true
+
+  wordpress_wp-admin_user:
+    title: "WordPress CMS WP-Admin User"
+    displayText: "WordPress CMS WP-Admin User"
+    type: string
+    visible: true
+
+  wordpress_wp-admin_password:
+    title: "WordPress CMS WP-Admin Password"
+    displayText: "WordPress CMS WP-Admin Password"
+    type: string
+    visible: true
+
+  wordpress_public_ip:
+    title: "WordPress CMS Public IP"
+    displayText: "WordPress CMS Public IP"
+    type: string
+    visible: true
+
+  mds_private_ip:
+    title: "MDS Private IP"
+    displayText: "MDS Private IP"
+    type: string
+    visible: true
+    
