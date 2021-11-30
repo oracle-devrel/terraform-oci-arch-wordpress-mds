@@ -119,7 +119,7 @@ module "oci-arch-wordpress-mds" {
   fingerprint                   = "<finger_print>"
   private_key_path              = "<private_key_path>"
   region                        = "<oci_region>"
-  availablity_domain_name       = "<availablity_domain_name>"
+  availability_domain_name      = "<availability_domain_name>"
   compartment_ocid              = "<compartment_ocid>"
   use_existing_vcn              = false
   compartment_ocid              = "<compartment_ocid>"
