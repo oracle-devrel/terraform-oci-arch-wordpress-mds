@@ -1,4 +1,4 @@
-## Copyright (c) 2021 Oracle and/or its affiliates.
+## Copyright (c) 2022, Oracle and/or its affiliates. 
 ## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 variable "tenancy_ocid" {}
@@ -32,6 +32,8 @@ module "oci-arch-wordpress-mds" {
   admin_password     = var.admin_password
   wp_password        = var.wp_password
   wp_site_admin_pass = var.wp_site_admin_pass
+  wp_version         = "5.8.3"
+  wp_auto_update     = false
   vcn_id             = oci_core_virtual_network.my_vcn.id
   wp_subnet_id       = oci_core_subnet.wp_subnet_private.id
   mds_subnet_id      = oci_core_subnet.mds_subnet_private.id

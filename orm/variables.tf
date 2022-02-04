@@ -1,4 +1,4 @@
-## Copyright (c) 2021, Oracle and/or its affiliates.
+## Copyright (c) 2022, Oracle and/or its affiliates. 
 ## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 variable "tenancy_ocid" {}
@@ -7,35 +7,7 @@ variable "region" {}
 #variable "fingerprint" {}
 #variable "private_key_path" {}
 #variable "user_ocid" {}
-variable "availability_domain_name" {
-  default = ""
-}
-
-variable "use_existing_vcn" {
-  default = false
-}
-
-variable "vcn_id" {
-  default = ""
-}
-
-variable "lb_subnet_id" {
-  default = ""
-}
-
-variable "wp_subnet_id" {
-  default = ""
-}
-
-variable "mds_subnet_id" {
-  default = ""
-}
-
-variable "fss_subnet_id" {
-  default = ""
-}
-
-variable "bastion_subnet_id" {
+variable "availablity_domain_name" {
   default = ""
 }
 
@@ -57,7 +29,7 @@ variable "flex_lb_max_shape" {
 
 variable "release" {
   description = "Reference Architecture Release (OCI Architecture Center)"
-  default     = "1.4.2"
+  default     = "1.4.3"
 }
 
 variable "vcn" {
@@ -138,6 +110,11 @@ variable "mysql_is_highly_available" {
   default = false
 }
 
+variable "wp_version" {
+  description = "WordPress version"
+  default = "5.8"
+}
+
 variable "wp_name" {
   description = "WordPress Database User Name."
   default     = "wp"
@@ -151,6 +128,10 @@ variable "wp_password" {
 variable "wp_schema" {
   description = "WordPress MySQL Schema"
   default     = "wordpress"
+}
+
+variable "wp_auto_update" {
+  default     = false
 }
 
 variable "wp_plugins" {
@@ -188,11 +169,3 @@ variable "wp_site_admin_email" {
   default     = "admin@example.com"
 }
 
-locals {
-  vcn_id            = !var.use_existing_vcn ? oci_core_virtual_network.wpmdsvcn[0].id : var.vcn_id
-  lb_subnet_id      = !var.use_existing_vcn ? var.numberOfNodes > 1 ? oci_core_subnet.lb_subnet_public[0].id : "" : var.lb_subnet_id
-  wp_subnet_id      = !var.use_existing_vcn ? oci_core_subnet.wp_subnet[0].id : var.wp_subnet_id
-  mds_subnet_id     = !var.use_existing_vcn ? oci_core_subnet.mds_subnet_private[0].id : var.mds_subnet_id
-  bastion_subnet_id = !var.use_existing_vcn ? (var.numberOfNodes > 1 && var.use_bastion_service == false) ? oci_core_subnet.bastion_subnet_public[0].id : "" : var.bastion_subnet_id
-  fss_subnet_id     = !var.use_existing_vcn ? (var.numberOfNodes > 1 && var.use_shared_storage) ? oci_core_subnet.fss_subnet_private[0].id : "" : var.fss_subnet_id
-}

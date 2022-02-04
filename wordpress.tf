@@ -1,12 +1,12 @@
-## Copyright (c) 2021, Oracle and/or its affiliates.
+## Copyright (c) 2022, Oracle and/or its affiliates. 
 ## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 module "wordpress" {
   source                    = "./modules/wordpress"
   tenancy_ocid              = var.tenancy_ocid
-  vcn_id                    = local.vcn_id
+  vcn_id                    = oci_core_virtual_network.wpmdsvcn.id
   numberOfNodes             = var.numberOfNodes
-  availability_domain       = var.availability_domain_name
+  availability_domain       = var.availablity_domain_name
   compartment_ocid          = var.compartment_ocid
   image_id                  = lookup(data.oci_core_images.InstanceImageOCID.images[0], "id")
   shape                     = var.node_shape
@@ -15,15 +15,17 @@ module "wordpress" {
   label_prefix              = var.label_prefix
   use_shared_storage        = var.use_shared_storage
   display_name              = "wordpress"
-  wp_subnet_id              = local.wp_subnet_id
-  lb_subnet_id              = var.numberOfNodes > 1 ? local.lb_subnet_id : ""
-  bastion_subnet_id         = (var.numberOfNodes > 1 && var.use_bastion_service == false) ? local.bastion_subnet_id : ""
-  fss_subnet_id             = var.numberOfNodes > 1 && var.use_shared_storage ? local.fss_subnet_id : ""
+  wp_subnet_id              = oci_core_subnet.wp_subnet.id
+  lb_subnet_id              = var.numberOfNodes > 1 ? oci_core_subnet.lb_subnet_public[0].id : ""
+  bastion_subnet_id         = (var.numberOfNodes > 1 && var.use_bastion_service == false) ? oci_core_subnet.bastion_subnet_public[0].id : ""
+  fss_subnet_id             = var.numberOfNodes > 1 && var.use_shared_storage ? oci_core_subnet.fss_subnet_private[0].id : ""
   ssh_authorized_keys       = var.ssh_public_key
   mds_ip                    = module.mds-instance.private_ip
   admin_password            = var.admin_password
   admin_username            = var.admin_username
+  wp_auto_update            = var.wp_auto_update
   wp_schema                 = var.wp_schema
+  wp_version                = var.wp_version
   wp_name                   = var.wp_name
   wp_password               = var.wp_password
   wp_plugins                = split(",", var.wp_plugins)
