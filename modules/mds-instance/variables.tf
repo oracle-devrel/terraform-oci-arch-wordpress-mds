@@ -1,4 +1,4 @@
-## Copyright (c) 2021, Oracle and/or its affiliates.
+## Copyright (c) 2022, Oracle and/or its affiliates. 
 ## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 variable "compartment_ocid" {
@@ -26,16 +26,16 @@ variable "mysql_shape" {
 }
 
 variable "admin_username" {
-  description = "Username od the MDS admin account"
+    description = "Username od the MDS admin account"
 }
 
 
 variable "admin_password" {
-  description = "Password for the admin user for MDS"
+    description = "Password for the admin user for MDS"
 }
 
 variable "configuration_id" {
-  description = "MySQL Instance Configuration ID"
+    description = "MySQL Instance Configuration ID"
 }
 
 variable "mysql_is_highly_available" {
@@ -43,7 +43,7 @@ variable "mysql_is_highly_available" {
 }
 
 variable "mysql_data_storage_in_gb" {
-  default = 50
+    default = 50
 }
 
 variable "defined_tags" {

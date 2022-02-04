@@ -1,4 +1,4 @@
-## Copyright (c) 2021, Oracle and/or its affiliates.
+## Copyright (c) 2022, Oracle and/or its affiliates. 
 ## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 variable "mysql_version" {
@@ -141,6 +141,15 @@ variable "image_id" {
 variable "vm_user" {
   description = "The SSH user to connect to the master host."
   default     = "opc"
+}
+
+variable "wp_version" {
+  description = "WordPress version"
+  default = "5.9"
+}
+
+variable "wp_auto_update" {
+  default     = true
 }
 
 variable "wp_name" {
