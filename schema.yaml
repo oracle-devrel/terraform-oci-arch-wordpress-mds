@@ -11,12 +11,17 @@ variableGroups:
   - tenancy_ocid
   - region
   - release
+  - mysql_db_system_display_name
+  - mysql_db_system_description
+  - mysql_db_system_maintenance_window_start_time
+  - mysql_db_system_hostname_label
+  - mysql_db_system_fault_domain
 
 - title: Required Configuration
   visible: true  
   variables:
   - compartment_ocid
-  - availablity_domain_name 
+  - availability_domain_name 
   - admin_password
   - wp_version
   - wp_password
@@ -93,8 +98,8 @@ variableGroups:
   variables:
   - mysql_shape
   - admin_username
+  - mysql_db_system_data_storage_size_in_gb
   - mysql_is_highly_available
-
 
 variables:
 
@@ -119,7 +124,7 @@ variables:
     title: "Region"
     description: "Choose Region where your WordPress and MDS will be deployed."
 
-  availablity_domain_name:
+  availability_domain_name:
     type: oci:identity:availabilitydomain:name
     required: true
     visibile: true
@@ -473,6 +478,21 @@ variables:
     description: "Choose if MySQL Database System should be highly available."
     visible: true
     default: false
+
+  mysql_db_system_display_name:
+    type: string
+    required: true
+    title: MySQL Database Service display name
+  
+  mysql_db_system_data_storage_size_in_gb:
+    type: number
+    title: "MySQL Data Storage Size in GB"
+    default: "50"
+
+  mysql_db_system_description:
+    type: string
+    required: true
+    title: MySQL Database Service description 
 
   label_prefix:
     type: string

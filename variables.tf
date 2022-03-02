@@ -7,7 +7,8 @@ variable "region" {}
 variable "fingerprint" {}
 variable "private_key_path" {}
 variable "user_ocid" {}
-variable "availablity_domain_name" {
+
+variable "availability_domain_name" {
   default = ""
 }
 
@@ -29,7 +30,7 @@ variable "flex_lb_max_shape" {
 
 variable "release" {
   description = "Reference Architecture Release (OCI Architecture Center)"
-  default     = "1.4.3"
+  default     = "1.5"
 }
 
 variable "vcn" {
@@ -110,6 +111,35 @@ variable "mysql_is_highly_available" {
   default = false
 }
 
+variable "mysql_db_system_data_storage_size_in_gb" {
+  default = 50
+}
+
+variable "mysql_db_system_description" {
+  description = "MySQL DB System for Drupal-MDS"
+  default = "MySQL DB System for Drupal-MDS"
+}
+
+variable "mysql_db_system_display_name" {
+  description = "MySQL DB System display name"
+  default = "WordPressMDS"
+}
+
+variable "mysql_db_system_fault_domain" {
+  description = "The fault domain on which to deploy the Read/Write endpoint. This defines the preferred primary instance."
+  default = "FAULT-DOMAIN-1"
+}                  
+
+variable "mysql_db_system_hostname_label" {
+  description = "The hostname for the primary endpoint of the DB System. Used for DNS. The value is the hostname portion of the primary private IP's fully qualified domain name (FQDN) (for example, dbsystem-1 in FQDN dbsystem-1.subnet123.vcn1.oraclevcn.com). Must be unique across all VNICs in the subnet and comply with RFC 952 and RFC 1123."
+  default = "DrupalMDS"
+}
+   
+variable "mysql_db_system_maintenance_window_start_time" {
+  description = "The start of the 2 hour maintenance window. This string is of the format: {day-of-week} {time-of-day}. {day-of-week} is a case-insensitive string like mon, tue, etc. {time-of-day} is the Time portion of an RFC3339-formatted timestamp. Any second or sub-second time data will be truncated to zero."
+  default = "SUNDAY 14:30"
+}
+
 variable "wp_version" {
   description = "WordPress version"
   default = "5.8"
@@ -122,7 +152,6 @@ variable "wp_name" {
 
 variable "wp_password" {
   description = "WordPress Database User Password."
-  #  default     = "MyWPpassw0rd!"  
 }
 
 variable "wp_schema" {
