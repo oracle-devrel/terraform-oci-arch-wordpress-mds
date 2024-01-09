@@ -456,10 +456,6 @@ variables:
     title: "MySQL Database System Shape"
     description: "Choose MySQL Database System Shape for your MDS deployments."
     enum:
-      - "VM.Standard.E2.1"
-      - "VM.Standard.E2.2"
-      - "VM.Standard.E2.4"  
-      - "VM.Standard.E2.8"
       - "MySQL.VM.Standard.E3.1.8GB"
       - "MySQL.VM.Standard.E3.1.16GB"      
       - "MySQL.VM.Standard.E3.2.32GB"
@@ -470,7 +466,17 @@ variables:
       - "MySQL.VM.Standard.E3.32.512GB"
       - "MySQL.VM.Standard.E3.48.768GB"    
       - "MySQL.VM.Standard.E3.64.1024GB"  
-      - "MySQL.HeatWave.VM.Standard.E3"   
+      - "MySQL.HeatWave.VM.Standard.E3"  
+      - "MySQL.VM.Standard.E4.1.8GB"
+      - "MySQL.VM.Standard.E4.1.16GB"      
+      - "MySQL.VM.Standard.E4.2.32GB"
+      - "MySQL.VM.Standard.E4.4.64GB"
+      - "MySQL.VM.Standard.E4.8.128GB"
+      - "MySQL.VM.Standard.E4.16.256GB"
+      - "MySQL.VM.Standard.E4.24.384GB"
+      - "MySQL.VM.Standard.E4.32.512GB"
+      - "MySQL.VM.Standard.E4.48.768GB"    
+      - "MySQL.VM.Standard.E4.64.1024GB"  
 
   mysql_is_highly_available:
     type: boolean
